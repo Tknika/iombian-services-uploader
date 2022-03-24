@@ -1,0 +1,16 @@
+[Unit]
+Description=IoMBian Services Uploader
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=simple
+User=iompi
+Restart=always
+RestartSec=5
+
+WorkingDirectory=/opt/iombian-services-uploader
+ExecStart=/opt/iombian-services-uploader/venv/bin/python /opt/iombian-services-uploader/main.py
+
+[Install]
+WantedBy=multi-user.target
