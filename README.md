@@ -5,25 +5,29 @@ This service scans the IoMBian services announced through Avahi (mDNS) and uploa
 
 ## Installation
 
+- Define project name in an environment variable:
+
+> ```PROJECT_NAME=iombian-services-uploader```
+
 - Clone the repo into a temp folder:
 
-> ```git clone https://github.com/Tknika/iombian-services-uploader.git /tmp/iombian-services-uploader && cd /tmp/iombian-services-uploader```
+> ```git clone https://github.com/Tknika/${PROJECT_NAME}.git /tmp/${PROJECT_NAME} && cd /tmp/${PROJECT_NAME}```
 
 - Create the installation folder and move the appropiate files (edit the user):
 
-> ```sudo mkdir /opt/iombian-services-uploader```
+> ```sudo mkdir /opt/${PROJECT_NAME}```
 
-> ```sudo cp requirements.txt /opt/iombian-services-uploader```
+> ```sudo cp requirements.txt /opt/${PROJECT_NAME}```
 
-> ```sudo cp -r src/* /opt/iombian-services-uploader```
+> ```sudo cp -r src/* /opt/${PROJECT_NAME}```
 
-> ```sudo cp systemd/iombian-services-uploader.service /etc/systemd/system/```
+> ```sudo cp systemd/${PROJECT_NAME}.service /etc/systemd/system/```
 
-> ```sudo chown -R iompi:iompi /opt/iombian-services-uploader```
+> ```sudo chown -R iompi:iompi /opt/${PROJECT_NAME}```
 
 - Create the virtual environment and install the dependencies:
 
-> ```cd /opt/iombian-services-uploader```
+> ```cd /opt/${PROJECT_NAME}```
 
 > ```python3 -m venv venv```
 
@@ -35,7 +39,8 @@ This service scans the IoMBian services announced through Avahi (mDNS) and uploa
 
 - Start the script
 
-> ```sudo systemctl enable iombian-services-uploader.service && sudo systemctl start iombian-services-uploader.service```
+> ```sudo systemctl enable ${PROJECT_NAME}.service && sudo systemctl start ${PROJECT_NAME}.service```
+
 
 
 ## Author
