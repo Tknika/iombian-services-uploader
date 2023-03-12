@@ -30,8 +30,9 @@ class IoMBianAvahiServicesFileHandler(FileSystemEventHandler):
 
     def stop(self):
         logger.debug("Stopping Avahi Service File Handler")
-        self.observer.stop()
-        self.observer.join()
+        if self.observer:
+            self.observer.stop()
+            self.observer.join()
 
     def add_services_discovered_callback(self, callback):
         if self.services_discovered_callback:

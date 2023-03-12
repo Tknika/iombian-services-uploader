@@ -1,57 +1,68 @@
 #!/usr/bin/env python3
 
-from firestore_handler import FirestoreHandler
+from firestore_client_handler import FirestoreClientHandler
 import logging
+import threading
 
 logger = logging.getLogger(__name__)
 
 
-class FirestoreServicesHandler(FirestoreHandler):
+class FirestoreServicesHandler(FirestoreClientHandler):
 
     KEYWORD = "services"
+    RESTART_DELAY_TIME_S = 0.5
 
-    def __init__(self, api_key, project_id, refresh_token, device_id):
-        super().__init__(api_key, project_id, refresh_token, self.__on_expired_token)
+    def __init__(self, api_key, project_id, refresh_token, device_id, services_update_callback=lambda _: None):
+        super().__init__(api_key, project_id, refresh_token)
         self.device_id = device_id
         self.users_path = None
         self.devices_path = None
-        self.services_update_callback = None
+        self.services_update_callback = services_update_callback
         self.device_subscription = None
         self.services_cache = None
 
     def start(self):
         logger.debug("Starting Firestore Services Handler")
-        self.initialize_db()
+        self.initialize_client()
 
     def stop(self):
         logger.debug("Stopping Firestore Services Handler")
         if self.device_subscription:
             self.device_subscription.unsubscribe()
             self.device_subscription = None
-        if self.db:
-            self.stop_db()
+        self.stop_client()
 
-    def initialize_db(self):
-        super().initialize_db()
-        if not self.db:
-            logger.error("DB connection not ready")
-            return
+    def restart(self):
+        logger.debug("Restarting Firestore Services Handler")
+        self.stop()
+        self.start()
+
+    def on_client_initialized(self):
+        logger.info("Firestore client initialized")
         self.devices_path = f"users/{self.user_id}/devices"
-        if not self.device_subscription:
-            self.device_subscription = self.db.collection(self.devices_path).document(
-                self.device_id).on_snapshot(self.__on_device_update)
+        if self.device_subscription:
+            return
+        self.device_subscription = self.client.collection(self.devices_path).document(
+            self.device_id).on_snapshot(self._on_device_update)
+
+    def on_server_not_responding(self):
+        logger.error("Firestore server not responding")
+        threading.Timer(self.RESTART_DELAY_TIME_S, self.restart).start()
+
+    def on_token_expired(self):
+        logger.debug("Refreshing Firebase client token id")
+        threading.Timer(self.RESTART_DELAY_TIME_S, self.restart).start()
 
     def update_services(self, services):
-        if not self.db:
-            self.initialize_db()
+        self.initialize_client(notify=False)
+        if not self.client:
+            logger.debug("Firebase client not ready, cannot update services")
+            return
         updated_field = {f"{self.KEYWORD}": services}
         self.db.collection(self.devices_path).document(
             self.device_id).update(updated_field)
 
-    def add_services_update_callback(self, callback):
-        self.services_update_callback = callback
-
-    def __on_device_update(self, document_snapshot, changes, read_time):
+    def _on_device_update(self, document_snapshot, changes, read_time):
         if len(document_snapshot) != 1:
             return
         device_info = document_snapshot[0].to_dict()
@@ -69,11 +80,3 @@ class FirestoreServicesHandler(FirestoreHandler):
         if services != self.services_cache:
             self.services_cache = services
             self.services_update_callback(services)
-
-    def __on_expired_token(self):
-        logger.debug("Refreshing Token Id")
-        if self.device_subscription:
-            self.device_subscription.unsubscribe()
-            self.device_subscription = None
-        self.db = None
-        self.initialize_db()

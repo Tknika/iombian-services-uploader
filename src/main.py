@@ -46,9 +46,7 @@ if __name__ == "__main__":
 
     firestore_services_cache = None
     firestore_services_handler = FirestoreServicesHandler(
-        api_key, project_id, refresh_token, device_id)
-    firestore_services_handler.add_services_update_callback(
-        on_db_services_updated)
+        api_key, project_id, refresh_token, device_id, on_db_services_updated)
     firestore_services_handler.start()
 
     while(firestore_services_cache == None):
