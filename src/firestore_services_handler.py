@@ -59,7 +59,7 @@ class FirestoreServicesHandler(FirestoreClientHandler):
             logger.debug("Firebase client not ready, cannot update services")
             return
         updated_field = {f"{self.KEYWORD}": services}
-        self.db.collection(self.devices_path).document(
+        self.client.collection(self.devices_path).document(
             self.device_id).update(updated_field)
 
     def _on_device_update(self, document_snapshot, changes, read_time):
@@ -71,7 +71,7 @@ class FirestoreServicesHandler(FirestoreClientHandler):
             logger.warn(
                 f"'{self.KEYWORD}' information not available, creating the new field")
             updated_field = {f"{self.KEYWORD}": {}}
-            self.db.collection(self.devices_path).document(
+            self.client.collection(self.devices_path).document(
                 self.device_id).update(updated_field)
             return
 
